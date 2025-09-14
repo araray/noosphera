@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "noosphera"
+version = "0.1.0"
+description = "A unified, flexible, and extensible interface for interacting with various Large Language Models (LLMs)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Araray Velho", email = "araray@gmail.com" }
+]
+keywords = ["llm", "ai", "language-model", "chat", "rag", "nlp", "neural", "networks", "library", "module"]
+
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+  "confy>=0.3",
+  "tomli>=2.0.1; python_version < '3.11'",
+]
+
+[project.scripts]
+noosphera-conf = "noosphera.cli.conf:main"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "UP", "B"]
+ignore = []
