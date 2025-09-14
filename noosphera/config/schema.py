@@ -19,6 +19,10 @@ class LoggingSettings(BaseModel):
 class DatabaseSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     url: str
+    admin_url: str
+    pool_size: int = Field(default=10)
+    max_overflow: int = Field(default=10)
+    connect_timeout_s: int = Field(default=5)
 
 
 class ProvidersSettings(BaseModel):

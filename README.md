@@ -16,8 +16,8 @@ pip install -e .
 
 # run API (reload for dev)
 uvicorn noosphera.api_server.asgi:app --reload
-# open: http://127.0.0.1:8000/api/v1/health
-# docs: http://127.0.0.1:8000/docs
+# open: http:
+# docs: http:
 ````
 
 ## Configuration (Confy)
@@ -55,6 +55,47 @@ noosphera-conf set logging.level "\"DEBUG\""
 ## Healthcheck
 
 ```bash
-curl http://localhost:8000/api/v1/health
+curl http:
 # {"status":"ok","service":"noosphera"}
 ```
+
+---
+
+## Phase 1.2 – Database & Tenants Quickstart
+
+> Requires: PostgreSQL (13+) with `pgvector` extension available.
+> The Step 1.2 migration will `CREATE EXTENSION IF NOT EXISTS "vector"` automatically.
+
+1. **Configure DB URLs** (see `.env.example`):
+
+```bash
+cp .env.example .env
+# edit credentials if needed
+```
+
+2. **Initialize database (core schema + tables)**
+
+```bash
+./scripts/db_init.sh
+```
+
+3. **Create a tenant & issue an API key**
+
+```bash
+# Create a tenant
+noosphera-tenant create-tenant --name "Acme Corp"
+
+# List tenants
+noosphera-tenant list-tenants
+
+# Create an API key (save it; it's shown once)
+noosphera-tenant create-key --tenant <TENANT_UUID> --name "server-1"
+```
+
+4. **Run API**
+
+```bash
+uvicorn noosphera.api_server.asgi:app --reload
+```
+
+The app initializes DB engines and runs core migrations on startup. Auth (Step 1.3) will use API keys to protect routes.

@@ -1,0 +1,26 @@
+# Noosphera example environment variables
+# Confy mapping: single '_' => nested '.', '__' => literal underscore
+# e.g.: NOOSPHERA_DATABASE_URL => database.url
+
+# Server
+NOOSPHERA_SERVER_HOST=0.0.0.0
+NOOSPHERA_SERVER_PORT=8000
+
+# Logging
+NOOSPHERA_LOGGING_LEVEL="INFO"
+NOOSPHERA_LOGGING_JSON=true
+NOOSPHERA_LOGGING_REQUEST_ID_HEADER="X-Request-ID"
+
+# Features
+NOOSPHERA_FEATURE_FLAGS__AUTH_ENABLED=false
+
+# Application (least-privilege) connection
+NOOSPHERA_DATABASE_URL=postgresql+psycopg://app:app@localhost:5432/noosphera
+
+# Admin connection for DDL/migrations & tenant schema mgmt
+NOOSPHERA_DATABASE_ADMIN_URL=postgresql+psycopg://admin:admin@localhost:5432/noosphera
+
+# Optional tuning
+NOOSPHERA_DATABASE_POOL_SIZE=10
+NOOSPHERA_DATABASE_MAX_OVERFLOW=10
+NOOSPHERA_DATABASE_CONNECT_TIMEOUT_S=5

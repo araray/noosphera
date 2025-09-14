@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "noosphera"
-version = "0.1.0"
+version = "0.1.2"
 description = "A unified, flexible, and extensible interface for interacting with various Large Language Models (LLMs)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,10 +21,15 @@ dependencies = [
   "python-dotenv>=1.0",
   "confy>=0.3",
   "tomli>=2.0.1; python_version < '3.11'",
+  "sqlalchemy[asyncio]>=2.0",
+  "psycopg[binary]>=3.2",
+  "alembic>=1.13",
+  "bcrypt>=4.1",
 ]
 
 [project.scripts]
 noosphera-conf = "noosphera.cli.conf:main"
+noosphera-tenant = "noosphera.cli.tenant:main"
 
 [tool.black]
 line-length = 100
