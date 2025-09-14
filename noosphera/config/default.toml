@@ -1,0 +1,19 @@
+[server]
+host = "0.0.0.0"
+port = 8000
+
+[logging]
+level = "INFO"
+json = true
+request_id_header = "X-Request-ID"
+
+[database]
+# filled in Step 1.2 (PostgreSQL + pgvector)
+url = "postgresql+psycopg://USER:PASS@localhost:5432/noosphera"
+
+[providers]
+default = "openai"
+# concrete keys/urls provided via env in later steps
+
+[features]
+auth_enabled = false   # will switch to true in Step 1.3
