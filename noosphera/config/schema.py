@@ -36,6 +36,12 @@ class FeatureFlags(BaseModel):
     auth_enabled: bool = Field(default=False)
 
 
+# NEW (Step 1.3): security settings surface
+class SecuritySettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    api_key_header: str = Field(default="X-Noosphera-API-Key")
+
+
 class Settings(BaseModel):
     """
     Typed, validated configuration envelope. Accepts extra keys to remain
@@ -46,4 +52,5 @@ class Settings(BaseModel):
     logging: LoggingSettings
     database: DatabaseSettings
     providers: ProvidersSettings
+    security: SecuritySettings  # NEW (Step 1.3)
     features: FeatureFlags

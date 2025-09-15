@@ -1,8 +1,9 @@
-from fastapi import Request
+from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config.schema import Settings
 from ..db.session import get_session
+from ..security.auth import AuthContext, require_api_key
 
 
 def get_settings(request: Request) -> Settings:
@@ -19,3 +20,10 @@ async def get_db() -> AsyncSession:
     """
     async with get_session() as s:
         yield s
+
+
+async def get_current_tenant(ctx: AuthContext = Depends(require_api_key)) -> AuthContext:
+    """
+    Convenience dependency to obtain the authenticated tenant context.
+    """
+    return ctx

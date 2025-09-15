@@ -17,7 +17,7 @@ from ..security.crypto import hash_secret, verify_secret
 
 def _gen_prefix(n: int = 8) -> str:
     # 8 hex chars: 32 bits of entropy, easy to read/copy, index-friendly
-    return secrets.token_hex(n // 2)
+    return secrets.token_hex(n)  # <-- FIXED: missing closing parenthesis
 
 
 def _gen_secret(nbytes: int = 24) -> str:

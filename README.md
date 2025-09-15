@@ -1,4 +1,4 @@
-# Noosphera — Phase 1.1 Scaffold
+# Noosphera
 
 This repo provides the initial service scaffold:
 - **FastAPI** app factory and ASGI entrypoint
@@ -18,7 +18,7 @@ pip install -e .
 uvicorn noosphera.api_server.asgi:app --reload
 # open: http:
 # docs: http:
-````
+```
 
 ## Configuration (Confy)
 
@@ -99,3 +99,46 @@ uvicorn noosphera.api_server.asgi:app --reload
 ```
 
 The app initializes DB engines and runs core migrations on startup. Auth (Step 1.3) will use API keys to protect routes.
+
+---
+
+## Phase 1.3 – API Key Authentication
+
+From this step, Noosphera is **secure by default** (except `/api/v1/health` which remains public).
+
+### Header
+
+* Default header: `X-Noosphera-API-Key` (configurable via `security.api_key_header`).
+
+### Usage
+
+```bash
+# Public endpoint (no key required)
+curl -i http://localhost:8000/api/v1/health
+```
+
+For protected endpoints (added in later steps), include the API key:
+
+```bash
+curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" http://localhost:8000/api/v1/<protected>
+```
+
+### Dev Toggle
+
+To temporarily disable enforcement in dev (not recommended in prod):
+
+```bash
+# via env
+export NOOSPHERA_FEATURE_FLAGS__AUTH_ENABLED=false
+
+# or in a config file
+[features]
+auth_enabled = false
+```
+
+The header name can be customized:
+
+```toml
+[security]
+api_key_header = "X-Your-Header"
+```

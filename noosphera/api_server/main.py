@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 from ..config.loader import load_settings
 from ..config.schema import Settings
@@ -10,6 +10,7 @@ from .routes import health_router
 # NEW: DB engine & tenant manager initialization
 from ..db.engine import init_engines, dispose_engines, get_admin_engine, get_app_engine, run_core_migrations
 from ..services.tenant_manager import TenantManager
+from ..security.auth import require_api_key  # NEW
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -39,7 +40,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await dispose_engines()
         return None
 
+    # Determine protected dependencies (Step 1.3)
+    protected_deps = [Depends(require_api_key)] if app.state.settings.features.auth_enabled else []
+
     # Public system endpoints (health is explicitly public in 1.1)
     app.include_router(health_router, prefix="/api/v1", tags=["system"])
+
+    # NOTE: Future routers (sessions/providers/etc.) must be included with:
+    # app.include_router(chat_router, prefix="/api/v1", dependencies=protected_deps)
+    # app.include_router(models_router, prefix="/api/v1", dependencies=protected_deps)
 
     return app
