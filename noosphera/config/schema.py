@@ -1,3 +1,4 @@
+# FILE: noosphera/config/schema.py
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -42,6 +43,13 @@ class SecuritySettings(BaseModel):
     api_key_header: str = Field(default="X-Noosphera-API-Key")
 
 
+# NEW (Step 1.4): chat settings surface
+class ChatSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    history_max_messages: int = Field(default=20, ge=1)
+    mock_llm_enabled: bool = Field(default=True)
+
+
 class Settings(BaseModel):
     """
     Typed, validated configuration envelope. Accepts extra keys to remain
@@ -54,3 +62,4 @@ class Settings(BaseModel):
     providers: ProvidersSettings
     security: SecuritySettings  # NEW (Step 1.3)
     features: FeatureFlags
+    chat: ChatSettings  # NEW (Step 1.4)

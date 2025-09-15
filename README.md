@@ -18,7 +18,7 @@ pip install -e .
 uvicorn noosphera.api_server.asgi:app --reload
 # open: http:
 # docs: http:
-```
+````
 
 ## Configuration (Confy)
 
@@ -114,13 +114,13 @@ From this step, Noosphera is **secure by default** (except `/api/v1/health` whic
 
 ```bash
 # Public endpoint (no key required)
-curl -i http://localhost:8000/api/v1/health
+curl -i http:
 ```
 
 For protected endpoints (added in later steps), include the API key:
 
 ```bash
-curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" http://localhost:8000/api/v1/<protected>
+curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" http:
 ```
 
 ### Dev Toggle
@@ -142,3 +142,50 @@ The header name can be customized:
 [security]
 api_key_header = "X-Your-Header"
 ```
+
+---
+
+## Phase 1.4 – Chat Sessions & Messages (Mock LLM)
+
+This step introduces per‑tenant chat storage and minimal context assembly. Endpoints are **protected** by the API key.
+
+### Config
+
+```toml
+[chat]
+history_max_messages = 20
+mock_llm_enabled = true   # set false when Step 1.5 providers are wired
+```
+
+### Endpoints
+
+**Create/continue + reply**
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/chat \
+  -H 'Content-Type: application/json' \
+  -H 'X-Noosphera-API-Key: ns_<prefix>_<secret>' \
+  -d '{
+        "session_id": null,
+        "message": {"role":"user", "content":"Hello there"},
+        "model": null,
+        "provider": null
+      }'
+# => {"session_id":"<UUID>","reply":{"role":"assistant","content":"Echo: Hello there"}}
+```
+
+**List sessions**
+
+```bash
+curl -s -H 'X-Noosphera-API-Key: ns_<prefix>_<secret>' \
+  http://localhost:8000/api/v1/chat/sessions
+```
+
+**List messages in a session**
+
+```bash
+curl -s -H 'X-Noosphera-API-Key: ns_<prefix>_<secret>' \
+  "http://localhost:8000/api/v1/chat/sessions/<SESSION_UUID>?limit=100"
+```
+
+> Per‑tenant tables (`chat_sessions`, `chat_messages`) are created lazily on first use.
