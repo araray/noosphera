@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Depends
+from fastapi.openapi.utils import get_openapi
 
 from ..config.loader import load_settings
 from ..config.schema import Settings

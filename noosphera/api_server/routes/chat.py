@@ -12,6 +12,7 @@ from ..models.chat import (
     ChatResponse,
     ChatSessionSummary,
     ChatMessageOut,
+    ChatReply,
 )
 from ..deps import get_current_tenant, get_db, get_settings, get_chat_service
 from ...config.schema import Settings
@@ -46,7 +47,7 @@ async def post_chat(
         provider=req.provider,
     )
 
-    return ChatResponse(session_id=session_id, reply=reply)  # type: ignore[arg-type]
+    return ChatResponse(session_id=session_id, reply=ChatReply(**reply))
 
 
 @chat_router.get("/chat/sessions", response_model=list[ChatSessionSummary], summary="List chat sessions (newest first)")
