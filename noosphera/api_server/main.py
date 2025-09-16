@@ -1,6 +1,6 @@
 # FILE: noosphera/api_server/main.py
 from __future__ import annotations
-
+from importlib.metadata import version
 import json
 from typing import Any
 
@@ -47,7 +47,7 @@ def create_app() -> FastAPI:
     # Logging bootstrap
     setup_logging(level=settings.logging.level, json=settings.logging.json)
 
-    app = FastAPI(title="Noosphera", version="0.1.4")
+    app = FastAPI(title="Noosphera", version=version("noosphera"))
 
     # Single source of truth for runtime config
     app.state.settings = settings
