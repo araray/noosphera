@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, constr
 
 
 class ChatMessageIn(BaseModel):
@@ -18,6 +18,8 @@ class ChatRequest(BaseModel):
     message: ChatMessageIn
     model: Optional[str] = None
     provider: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
 
 
 class ChatReply(BaseModel):
@@ -28,6 +30,9 @@ class ChatReply(BaseModel):
 class ChatResponse(BaseModel):
     session_id: UUID
     reply: ChatReply
+    model: Optional[str] = None
+    provider: Optional[str] = None
+    usage: Optional[dict] = None
 
 
 class ChatSessionSummary(BaseModel):

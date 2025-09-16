@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -48,6 +47,8 @@ class ChatService:
         incoming_text: str,
         model: str | None,
         provider: str | None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> dict:
         # 1) Load history
         n = int(self._settings.chat.history_max_messages)
@@ -61,11 +62,22 @@ class ChatService:
         msgs.append({"role": incoming_role, "content": incoming_text})
 
         # 4) LLM call
-        reply = await self._llm.chat(messages=msgs, model=model, provider=provider)
+        reply = await self._llm.chat(
+            messages=msgs,
+            model=model,
+            provider=provider,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
         content = reply.get("content", "")
+        meta = {
+            "provider": reply.get("provider"),
+            "model": reply.get("model"),
+            "usage": reply.get("usage"),
+        }
 
         # 5) Persist assistant
-        await self._repo.append_message(session_id, "assistant", content, meta=reply.get("meta"))
+        await self._repo.append_message(session_id, "assistant", content, meta=meta)
 
         # 6) Observability (Phase-1 minimal)
         log.info(
@@ -79,4 +91,10 @@ class ChatService:
             },
         )
 
-        return {"role": "assistant", "content": content}
+        return {
+            "role": "assistant",
+            "content": content,
+            "model": reply.get("model"),
+            "provider": reply.get("provider"),
+            "usage": reply.get("usage"),
+        }

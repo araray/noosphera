@@ -1,4 +1,5 @@
 # FILE: noosphera/api_server/deps.py
+import logging
 from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,10 +7,12 @@ from ..config.schema import Settings
 from ..db.session import get_session
 from ..security.auth import AuthContext, require_api_key
 
-# NEW: chat service factory bits
+# chat service factory bits
 from ..repositories.chat_repository import ChatRepository
 from ..services.chat_service import ChatService
 from ..ports.llm import MockLLM
+from ..ports.llm_provider_adapter import ProviderBackedLLM
+from ..providers.manager import ProviderManager
 
 
 def get_settings(request: Request) -> Settings:
@@ -35,14 +38,32 @@ async def get_current_tenant(ctx: AuthContext = Depends(require_api_key)) -> Aut
     return ctx
 
 
+def get_logger() -> logging.Logger:
+    """
+    Provide a module-level logger to DI without coupling to specific impls.
+    """
+    return logging.getLogger("noosphera")
+
+
+def get_provider_manager(
+    cfg: Settings = Depends(get_settings),
+    logger: logging.Logger = Depends(get_logger),
+) -> ProviderManager:
+    """
+    Construct a ProviderManager for routing chat calls to concrete providers.
+    """
+    return ProviderManager(cfg, logger)
+
+
 async def get_chat_service(
     request: Request,
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
+    pm: ProviderManager = Depends(get_provider_manager),
 ) -> ChatService:
     """
     Construct a ChatService scoped to the current tenant.
-    LLM: MockLLM if settings.chat.mock_llm_enabled; otherwise placeholder.
+    Chooses LLM adapter based on config toggles.
     """
     # Tenant model is attached by require_api_key
     tenant = getattr(request.state, "tenant", None)
@@ -52,7 +73,11 @@ async def get_chat_service(
     schema: str = tenant.db_schema_name
     repo = ChatRepository(session=db, schema=schema)
 
-    # For Step 1.4, only MockLLM is wired.
-    llm = MockLLM() if settings.chat.mock_llm_enabled else MockLLM()
+    if settings.chat.mock_llm_enabled:
+        llm = MockLLM()
+    elif settings.providers.enabled:
+        llm = ProviderBackedLLM(pm, settings.providers.default_model or None)
+    else:
+        llm = MockLLM()  # conservative fallback
 
     return ChatService(repo=repo, llm=llm, settings=settings, schema=schema)

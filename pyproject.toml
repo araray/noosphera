@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "noosphera"
-version = "0.1.4"
+version = "0.1.5"
 description = "A unified, flexible, and extensible interface for interacting with various Large Language Models (LLMs)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,6 +25,8 @@ dependencies = [
   "psycopg[binary]>=3.2",
   "alembic>=1.13",
   "bcrypt>=4.1",
+  "httpx>=0.27",
+  "tenacity>=8.2",
 ]
 
 [project.scripts]

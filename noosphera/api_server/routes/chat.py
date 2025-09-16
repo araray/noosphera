@@ -45,10 +45,17 @@ async def post_chat(
         incoming_text=req.message.content,
         model=req.model,
         provider=req.provider,
+        temperature=req.temperature,
+        max_tokens=req.max_tokens,
     )
 
-    return ChatResponse(session_id=session_id, reply=ChatReply(**reply))
-
+    return ChatResponse(
+        session_id=session_id,
+        reply=ChatReply(role=reply["role"], content=reply["content"]),
+        model=reply.get("model"),
+        provider=reply.get("provider"),
+        usage=reply.get("usage"),
+    )
 
 @chat_router.get("/chat/sessions", response_model=list[ChatSessionSummary], summary="List chat sessions (newest first)")
 async def list_chat_sessions(

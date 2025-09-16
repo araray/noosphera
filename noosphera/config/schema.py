@@ -26,10 +26,31 @@ class DatabaseSettings(BaseModel):
     connect_timeout_s: int = Field(default=5)
 
 
+class OpenAISettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    enabled: bool = Field(default=False)
+    api_key: str | None = Field(default=None)
+    base_url: str = Field(default="https://api.openai.com/v1")
+    organization: str | None = Field(default=None)
+    request_timeout_s: int = Field(default=60, ge=1)
+    default_model: str | None = Field(default=None)
+
+
+class OllamaSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    enabled: bool = Field(default=False)
+    host: str = Field(default="http://127.0.0.1:11434")
+    request_timeout_s: int = Field(default=60, ge=1)
+    default_model: str | None = Field(default=None)
+
+
 class ProvidersSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    default: str = Field(default="openai")
-    # Provider-specific fields arrive in later steps.
+    enabled: bool = Field(default=False)
+    default_provider: str = Field(default="openai")
+    default_model: str | None = Field(default=None)
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    ollama: OllamaSettings = Field(default_factory=OllamaSettings)
 
 
 class FeatureFlags(BaseModel):
