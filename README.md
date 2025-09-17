@@ -6,7 +6,7 @@ This repo provides the initial service scaffold:
 - Base Pydantic models (Role/Message/Usage)
 - Public health endpoint: `GET /api/v1/health`
 
-> Roadmap: DB & Tenants (Step 1.2), Auth (1.3), Sessions (1.4), Providers (1.5), Observability (1.6).
+> Roadmap: DB & Tenants (Step 1.2), Auth (1.3), Sessions (1.4), Providers (1.5), **Observability (1.6)**.
 
 ## Quickstart
 
@@ -16,8 +16,8 @@ pip install -e .
 
 # run API (reload for dev)
 uvicorn noosphera.api_server.asgi:app --reload
-# open: http:
-# docs: http:
+# open: http://localhost:8000/api/v1/health
+# docs: http://localhost:8000/docs
 ````
 
 ## Configuration (Confy)
@@ -32,7 +32,9 @@ loaded **non-destructively** (won’t override already-set env vars).
 
 * `_` → `.` (nesting)
 * `__` → `_` (literal underscore)
-  Examples:
+
+Examples:
+
 * `NOOSPHERA_SERVER_PORT=8081` → `server.port`
 * `NOOSPHERA_LOGGING_LEVEL="DEBUG"` → `logging.level`
 * `NOOSPHERA_FEATURE_FLAGS__AUTH_ENABLED=true` → `features.auth_enabled`
@@ -55,7 +57,7 @@ noosphera-conf set logging.level "\"DEBUG\""
 ## Healthcheck
 
 ```bash
-curl http:
+curl http://localhost:8000/api/v1/health
 # {"status":"ok","service":"noosphera"}
 ```
 
@@ -114,13 +116,13 @@ From this step, Noosphera is **secure by default** (except `/api/v1/health` whic
 
 ```bash
 # Public endpoint (no key required)
-curl -i http:
+curl -i http://localhost:8000/api/v1/health
 ```
 
 For protected endpoints (added in later steps), include the API key:
 
 ```bash
-curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" http:
+curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" http://localhost:8000/api/v1/...
 ```
 
 ### Dev Toggle
@@ -185,7 +187,66 @@ curl -s -H 'X-Noosphera-API-Key: ns_<prefix>_<secret>' \
 
 ```bash
 curl -s -H 'X-Noosphera-API-Key: ns_<prefix>_<secret>' \
-  "http://localhost:8000/api/v1/chat/sessions/<SESSION_UUID>?limit=100"
+  "http://localhost:8000/api/v1/chat/sessions/<SESSION_UUID>"
 ```
 
 > Per‑tenant tables (`chat_sessions`, `chat_messages`) are created lazily on first use.
+
+---
+
+## Phase 1.6 – Observability & Diagnostics
+
+### Request Correlation (Request ID)
+
+* Middleware sets/propagates a **request ID** from `logging.request_id_header` (default `X-Request-ID`).
+* The value is returned in the same response header.
+* Logs include `correlation_id` and (if authenticated) `tenant_id`.
+
+```bash
+curl -i http://localhost:8000/api/v1/health \
+  -H 'X-Request-ID: 12345'
+# response will include 'X-Request-ID: 12345'
+```
+
+### Prometheus Metrics
+
+* Enable/disable with:
+
+```toml
+[metrics]
+enabled = true
+path = "/metrics"
+include_tenant_label = false
+```
+
+* When enabled, scrape `GET /metrics`.
+* **Cardinality caution:** set `include_tenant_label=true` only if tenant count is bounded.
+
+### Tracing (Stub)
+
+```toml
+[tracing]
+enabled = false
+otlp_endpoint = ""
+sample_ratio = 0.01
+```
+
+> If you install OpenTelemetry packages and set `enabled = true`, the service will initialize a sampler and (optionally) an OTLP exporter endpoint.
+
+### Dev Diagnostics: Redacted Config
+
+* Expose redacted effective config (protected) **only when** enabled:
+
+```toml
+[debug]
+config_inspect_enabled = true
+```
+
+* Then call:
+
+```bash
+curl -H "X-Noosphera-API-Key: ns_<prefix>_<secret>" \
+  http://localhost:8000/api/v1/config
+```
+
+Sensitive keys like `api_key`, `token`, `secret`, `password` are masked.

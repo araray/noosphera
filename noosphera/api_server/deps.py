@@ -45,6 +45,17 @@ def get_logger() -> logging.Logger:
     return logging.getLogger("noosphera")
 
 
+def get_request_id(request: Request, settings: Settings = Depends(get_settings)) -> str:
+    """
+    Provide the per-request correlation/request ID.
+    Populated by RequestContextMiddleware; falls back to reading the configured header.
+    """
+    rid = getattr(request.state, "correlation_id", None)
+    if rid:
+        return rid
+    return request.headers.get(settings.logging.request_id_header, "") or ""
+
+
 def get_provider_manager(
     cfg: Settings = Depends(get_settings),
     logger: logging.Logger = Depends(get_logger),

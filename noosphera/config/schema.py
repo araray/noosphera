@@ -15,6 +15,7 @@ class LoggingSettings(BaseModel):
     level: str = Field(default="INFO")
     json: bool = Field(default=True)
     request_id_header: str = Field(default="X-Request-ID")
+    sanitize_prompts: bool = Field(default=False)  # NEW (1.6)
 
 
 class DatabaseSettings(BaseModel):
@@ -30,7 +31,7 @@ class OpenAISettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     enabled: bool = Field(default=False)
     api_key: str | None = Field(default=None)
-    base_url: str = Field(default="https://api.openai.com/v1")
+    base_url: str = Field(default="https:")
     organization: str | None = Field(default=None)
     request_timeout_s: int = Field(default=60, ge=1)
     default_model: str | None = Field(default=None)
@@ -39,7 +40,7 @@ class OpenAISettings(BaseModel):
 class OllamaSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     enabled: bool = Field(default=False)
-    host: str = Field(default="http://127.0.0.1:11434")
+    host: str = Field(default="http:")
     request_timeout_s: int = Field(default=60, ge=1)
     default_model: str | None = Field(default=None)
 
@@ -71,6 +72,28 @@ class ChatSettings(BaseModel):
     mock_llm_enabled: bool = Field(default=True)
 
 
+# NEW (Step 1.6): metrics settings
+class MetricsSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    enabled: bool = Field(default=True)
+    path: str = Field(default="/metrics")
+    include_tenant_label: bool = Field(default=False)
+
+
+# NEW (Step 1.6): tracing settings
+class TracingSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    enabled: bool = Field(default=False)
+    otlp_endpoint: str | None = Field(default=None)
+    sample_ratio: float = Field(default=0.01, ge=0.0, le=1.0)
+
+
+# NEW (Step 1.6): debug settings
+class DebugSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    config_inspect_enabled: bool = Field(default=False)
+
+
 class Settings(BaseModel):
     """
     Typed, validated configuration envelope. Accepts extra keys to remain
@@ -84,3 +107,6 @@ class Settings(BaseModel):
     security: SecuritySettings  # NEW (Step 1.3)
     features: FeatureFlags
     chat: ChatSettings  # NEW (Step 1.4)
+    metrics: MetricsSettings  # NEW (Step 1.6)
+    tracing: TracingSettings  # NEW (Step 1.6)
+    debug: DebugSettings  # NEW (Step 1.6)

@@ -12,9 +12,12 @@ from ..config.loader import load_settings
 from ..config.schema import Settings
 from ..db.engine import dispose_engines, get_admin_engine, get_app_engine, init_engines, run_core_migrations
 from ..observability.logging import setup_logging
+from ..observability.middleware import RequestContextMiddleware  # NEW
+from ..observability.metrics import make_metrics_app  # NEW
+from ..observability.tracing import setup_tracing  # NEW
 from ..services.tenant_manager import TenantManager
 from ..security.security_schemes import api_key_scheme
-from .routes import health_router, chat_router, models_router  # NEW
+from .routes import health_router, chat_router, models_router, system_router  # NEW
 
 
 def _enable_openapi_api_key(app: FastAPI, header_name: str) -> None:
@@ -47,10 +50,26 @@ def create_app() -> FastAPI:
     # Logging bootstrap
     setup_logging(level=settings.logging.level, json=settings.logging.json)
 
+    # Tracing (Phase 1 stub)
+    setup_tracing(settings.tracing)  # NEW
+
     app = FastAPI(title="Noosphera", version=version("noosphera"))
 
     # Single source of truth for runtime config
     app.state.settings = settings
+
+    # Request context middleware (correlation ID + metrics)
+    app.add_middleware(
+        RequestContextMiddleware,
+        header_name=settings.logging.request_id_header,
+        metrics_enabled=settings.metrics.enabled,
+        metrics_path=settings.metrics.path,
+        include_tenant_label=settings.metrics.include_tenant_label,
+    )
+
+    # Metrics endpoint
+    if settings.metrics.enabled:
+        app.mount(settings.metrics.path, make_metrics_app())
 
     @app.on_event("startup")
     async def _startup() -> None:
@@ -80,7 +99,11 @@ def create_app() -> FastAPI:
     # Chat routes (protected)
     app.include_router(chat_router, prefix="/api/v1", tags=["chat"], dependencies=protected_deps)
 
-    # NEW: Models listing (protected)
+    # Models listing (protected)
     app.include_router(models_router, prefix="/api/v1", tags=["models"], dependencies=protected_deps)
+
+    # System diagnostics (protected + enabled only)
+    if settings.debug.config_inspect_enabled:
+        app.include_router(system_router, prefix="/api/v1", tags=["system"], dependencies=protected_deps)
 
     return app
