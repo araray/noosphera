@@ -39,9 +39,9 @@ class KeyStatus(str, enum.Enum):
 class Tenant(Base):
     __tablename__ = "tenants"
     __table_args__ = (
-        {"schema": "core"},
         UniqueConstraint("name", name="uq_tenants_name"),
         UniqueConstraint("db_schema_name", name="uq_tenants_schema"),
+        {"schema": "core"},
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -61,11 +61,11 @@ class Tenant(Base):
 class ApiKey(Base):
     __tablename__ = "api_keys"
     __table_args__ = (
-        {"schema": "core"},
         UniqueConstraint("key_prefix", name="uq_api_keys_prefix"),
         Index("ix_api_keys_tenant_id", "tenant_id"),
         # optional: a (tenant_id, name) uniqueness if you want key names unique per tenant
         UniqueConstraint("tenant_id", "name", name="uq_api_keys_tenant_name"),
+        {"schema": "core"},
     )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)

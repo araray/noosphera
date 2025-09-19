@@ -13,9 +13,9 @@ class ServerSettings(BaseModel):
 class LoggingSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     level: str = Field(default="INFO")
-    json: bool = Field(default=True)
+    json_mode: bool = Field(default=True, alias="json")
     request_id_header: str = Field(default="X-Request-ID")
-    sanitize_prompts: bool = Field(default=False)  # NEW (1.6)
+    sanitize_prompts: bool = Field(default=False)
 
 
 class DatabaseSettings(BaseModel):
