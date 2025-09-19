@@ -4,7 +4,7 @@ import asyncio
 import os
 
 from alembic import context
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 # Import metadata from core models
@@ -34,6 +34,8 @@ def run_migrations_offline() -> None:
         compare_type=True,
     )
     with context.begin_transaction():
+        # Ensure the version-table schema exists even in offline SQL output
+        context.execute('CREATE SCHEMA IF NOT EXISTS core')
         context.run_migrations()
 
 
@@ -51,7 +53,9 @@ def _run_sync_migrations(connection) -> None:
 
 async def run_migrations_online() -> None:
     connectable: AsyncEngine = create_async_engine(_get_url(), poolclass=pool.NullPool)
-    async with connectable.connect() as connection:
+    async with connectable.begin() as connection:
+        # Ensure target schema exists before Alembic creates core.alembic_version
+        await connection.execute(text('CREATE SCHEMA IF NOT EXISTS "core"'))
         await connection.run_sync(_run_sync_migrations)
     await connectable.dispose()
 
