@@ -18,9 +18,13 @@ def upgrade() -> None:
 
     tenant_status = postgresql.ENUM("active", "suspended", name="tenant_status", schema="core")
     key_status = postgresql.ENUM("active", "revoked", name="key_status", schema="core")
-    tenant_status.create(op.get_bind(), checkfirst=True)
-    key_status.create(op.get_bind(), checkfirst=True)
-
+    # IMPORTANT: prevent auto-creation on table create; we create explicitly with checkfirst
+    tenant_status = postgresql.ENUM(
+        "active", "suspended", name="tenant_status", schema="core", create_type=False
+    )
+    key_status = postgresql.ENUM(
+        "active", "revoked", name="key_status", schema="core", create_type=False
+    )
     op.create_table(
         "tenants",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
@@ -46,8 +50,7 @@ def upgrade() -> None:
         sa.Column("key_prefix", sa.String(length=16), nullable=False),
         sa.Column("key_hash", sa.Text(), nullable=False),
         sa.Column("name", sa.Text(), nullable=True),
-        sa.Column("status", key_status, nullable=False, server_default="active"),
-        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("status", key_status, nullable=False, server_default="active"),        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["tenant_id"], ["core.tenants.id"], ondelete="CASCADE"),
